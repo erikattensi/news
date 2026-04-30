@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit module</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+    }
+    body {
+      background: #f0f0f2;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .pic-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      margin: -16px -16px 16px;
+      background: rgba(240, 240, 242, 0.92);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .pic-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #1a1a1f;
+      text-decoration: none;
+      background: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    .pic-back:hover {
+      background: #f6f6f8;
+      border-color: rgba(0, 0, 0, 0.14);
+    }
+    .pic-back:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+    .pic-page {
+      padding: 16px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .pic-page img {
+      display: block;
+      width: 100%;
+      height: auto;
+      vertical-align: top;
+      border-radius: 4px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="pic-page">
+    <header class="pic-toolbar">
+      <a href="index.html" class="pic-back" aria-label="Back to modules">
+        <span aria-hidden="true">←</span> Back to modules
+      </a>
+    </header>
+    <img
+      src="/edit-module-screenshot.png"
+      alt="Edit module — Projects, sidebar with modules, module settings and conversations"
+    />
+  </div>
+</body>
+</html>

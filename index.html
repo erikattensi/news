@@ -1,1598 +1,583 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>VG X</title>
   <style>
     * {
       box-sizing: border-box;
     }
-    html {
-      margin: 0;
-      width: 100%;
-      min-height: 100%;
-      /* Single vertical scroll on the document (avoid overflow-x on body — it can block page scroll) */
-      overflow-x: hidden;
-      overflow-y: scroll;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-x pan-y;
-    }
-
+    html,
     body {
       margin: 0;
-      width: 100%;
-      min-height: 100vh;
+      height: 100%;
       min-height: 100dvh;
-      padding: 2rem;
-      padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px));
-      background-color: #9ca3af;
-      background-image: radial-gradient(
-        ellipse 120% 80% at 50% 20%,
-        #b8bcc8 0%,
-        #9ca3af 45%,
-        #787f8a 100%
-      );
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: #000;
-      overflow: visible;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+        max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      background: #6b7280;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     }
 
-    .modules-page {
-      max-width: 520px;
-      margin: 0 auto;
+    .device {
+      position: relative;
+      width: min(320px, 86vw);
+      height: min(640px, 86dvh);
+      border-radius: 36px;
+      background: #0f0f0f;
+      padding: 10px;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+        0 24px 48px rgba(0, 0, 0, 0.35);
+    }
+    .device__notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96px;
+      height: 26px;
+      border-radius: 0 0 16px 16px;
+      background: #0f0f0f;
+      z-index: 5;
+    }
+    .device__screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #0a1628;
+    }
+
+    .device__screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background: #0a1628 center / cover no-repeat url("/hero-boat.png");
+    }
+
+    /* —— VG X app —— */
+    .vg {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
       display: flex;
       flex-direction: column;
-      align-items: stretch;
-      gap: 24px;
-      padding-bottom: max(3rem, env(safe-area-inset-bottom, 0px));
-      width: 100%;
+      color: #fff;
     }
 
-    .modules-side-panel {
-      position: fixed;
-      top: 50%;
-      right: 2rem;
-      transform: translateY(-50%);
-      width: 280px;
-      max-height: calc(100vh - 4rem);
-      max-height: calc(100dvh - 4rem);
-      overflow-y: auto;
-      padding: 14px;
-      border: 1px solid rgba(0, 0, 0, 0.22);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.95);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
-      backdrop-filter: blur(3px);
-      z-index: 40;
+    .vg-hero {
+      position: relative;
+      z-index: 1;
+      flex: 0 0 46%;
+      min-height: 0;
+      background: transparent;
     }
 
-    .modules-side-panel__title {
-      margin: 0 0 10px;
-      font-size: 14px;
+    .vg-hero__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 14px 0;
+    }
+
+    .vg-logo {
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.03em;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    .vg-logo__x {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      margin-left: 2px;
+      border: 2px solid #fff;
+      border-radius: 3px;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .vg-hero__bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -120px;
+      z-index: 5;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 12px 14px 16px;
+    }
+
+    .vg-tag {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #d30000;
+      color: #fff;
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.01em;
     }
 
-    .modules-side-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .modules-side-link {
-      width: 100%;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      background: #fff;
-      color: #111;
-      border-radius: 8px;
-      padding: 9px 10px;
-      text-align: left;
-      font: inherit;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .modules-side-link:hover {
-      background: #f3f4f6;
-      border-color: rgba(0, 0, 0, 0.25);
-    }
-
-    .modules-side-link:focus-visible {
-      outline: 2px solid #2563eb;
-      outline-offset: 2px;
-    }
-
-    @media (max-width: 1320px) {
-      .modules-side-panel {
-        display: none;
-      }
-    }
-
-    .module-stack {
-      position: relative;
-      flex-shrink: 0;
-      width: 100%;
-      min-width: 0;
-    }
-
-    .module {
-      position: relative;
-      border: 1px solid #000;
-      background: #fff;
-      overflow: visible;
-    }
-
-    .module-stack.module-stack--scroll-highlight > .module {
-      animation: moduleBorderPulse 630ms ease-out 3;
-    }
-
-    @keyframes moduleBorderPulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-      }
-      25% {
-        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.7);
-      }
-      100% {
-        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
-      }
-    }
-
-    .module-stack.module-stack--conversations-open > .module {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      background: #fff;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    }
-
-    .module__body-wrap {
-      position: relative;
-      border-bottom: 1px solid #000;
-    }
-
-    .module-stack-placeholder {
-      flex-shrink: 0;
-      align-self: stretch;
-      pointer-events: none;
-      visibility: hidden;
-      box-sizing: border-box;
-    }
-
-    .module-stack.module-stack--reorder-dragging {
-      position: fixed !important;
-      margin: 0 !important;
-      z-index: 10000 !important;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
-      cursor: grabbing !important;
-    }
-
-    body.is-reordering-modules {
-      user-select: none;
-      cursor: grabbing !important;
-    }
-
-    .module--selected {
-      cursor: grab;
-    }
-
-    .module--selected .module__body {
-      cursor: grab;
-    }
-
-    .module__header {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 12px 14px;
-      background: #e8e8e8;
-      border-bottom: 1px solid #000;
-    }
-
-    .module__edit-btn {
+    .vg-gallery {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 12px;
+      margin: 0;
+      padding: 7px 12px 7px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
       font: inherit;
-      font-size: 14px;
-      background: #fff;
-      border: 1px solid #000;
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .module__edit-btn svg {
-      width: 10px;
-      height: 10px;
-      flex-shrink: 0;
-    }
-
-    .module__body {
-      padding: 18px 16px 16px;
-      background: #fff;
-      cursor: pointer;
-    }
-
-    .module__title {
-      margin: 0 0 10px;
-      font-size: 18px;
+      font-size: 11px;
       font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .vg-gallery__ai {
+      flex-shrink: 0;
+      display: block;
+    }
+    .vg-gallery:hover {
+      background: rgba(0, 0, 0, 0.55);
+    }
+    .vg-gallery:active {
+      transform: scale(0.98);
     }
 
-    .module__desc {
-      margin: 0 0 16px;
-      font-size: 14px;
-      line-height: 1.45;
-      color: #111;
+    .vg-sheet {
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-top: 112px;
+      padding: 22px 18px 72px;
+      border-radius: 28px 28px 0 0;
+      background: #121212;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+      z-index: 2;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
-    .module__meta {
+    .vg-headline {
+      margin: 0 0 14px;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+    }
+
+    .vg-list {
       margin: 0;
       padding: 0;
       list-style: none;
-      font-size: 14px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 11px;
     }
-
-    .module__meta li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .icon-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #9e9e9e;
-      flex-shrink: 0;
-    }
-
-    .icon-square {
-      width: 10px;
-      height: 10px;
-      border-radius: 2px;
-      background: #9e9e9e;
-      flex-shrink: 0;
-    }
-
-    .module__footer {
+    .vg-list li {
       position: relative;
-      padding: 0;
-      background: #fff;
-      border-top: none;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .module__footer-btn {
-      width: 100%;
-      margin: 0;
-      padding: 12px 40px 12px 14px;
-      border: none;
-      background: transparent;
-      font: inherit;
-      font-size: 14px;
-      color: inherit;
-      cursor: pointer;
-      text-align: center;
-      position: relative;
-    }
-
-    .module__footer-chevron {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      align-items: center;
-      color: #000;
-      pointer-events: none;
-    }
-
-    .module-stack--conversations-open .module__footer-chevron svg {
-      transform: rotate(180deg);
-    }
-
-    .module__footer-chevron svg {
-      width: 12px;
-      height: 12px;
-      display: block;
-      transition: transform 0.15s ease;
-    }
-
-    .module-conversations {
-      margin-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      min-width: 0;
-    }
-
-    .module-stack .module-conversations:not([hidden]) {
-      flex-shrink: 0;
-    }
-
-    .module-conversations[hidden] {
-      display: none;
-    }
-
-    .sub-module {
-      border: 1px solid #c5c5c5;
-      background: #fff;
-      overflow: hidden;
-      flex-shrink: 0;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .sub-module__media {
-      margin: 0;
-      line-height: 0;
-      background: #eee;
-    }
-
-    .sub-module__media img {
-      display: block;
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      object-position: center center;
-    }
-
-    .sub-module__body {
-      padding: 16px 16px 12px;
-    }
-
-    .sub-module__title {
-      margin: 0 0 10px;
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .sub-module__desc {
-      margin: 0 0 12px;
-      font-size: 14px;
+      padding-left: 14px;
+      font-size: 12px;
       line-height: 1.45;
-      color: #222;
+      color: rgba(255, 255, 255, 0.92);
+    }
+    .vg-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.42em;
+      width: 5px;
+      height: 5px;
+      background: #d30000;
+      border-radius: 1px;
     }
 
-    .sub-module__meta {
-      margin: 0;
-      font-size: 14px;
-      color: #333;
+    .vg-nav {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      background: #121212;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
-
-    .sub-module__footer {
-      padding: 10px 16px 14px;
-      text-align: center;
-      border-top: 1px solid #e8e8e8;
-      background: #fff;
-    }
-
-    .sub-module__hit {
-      display: block;
-      color: inherit;
-      text-decoration: none;
+    .vg-nav__btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: #fff;
       cursor: pointer;
-      outline-offset: 2px;
+    }
+    .vg-nav__btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .vg-nav__btn svg {
+      width: 22px;
+      height: 22px;
     }
 
-    .sub-module__hit:hover .sub-module__media img {
-      opacity: 0.92;
+    .vg-nav__cluster {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .vg-nav__cluster .vg-nav__btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+    }
+    .vg-nav__cluster .vg-nav__btn--active {
+      background: rgba(211, 0, 0, 0.22);
+      color: #ffb4b4;
     }
 
-    .sub-module__hit--body:hover {
-      background: #fafafa;
+    /* AI-forklaring (modal) */
+    .vg-ai-modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0;
     }
-
-    .sub-module__hit--footer:hover {
-      background: #fafafa;
+    .vg-ai-modal--open {
+      display: flex;
     }
-
-    .sub-module__edit {
-      font: inherit;
-      font-size: 13px;
-      color: #9ca3af;
+    .vg-ai-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
-
-    .sub-module__hit--footer:hover .sub-module__edit {
-      color: #6b7280;
+    .vg-ai-modal__panel {
+      position: relative;
+      z-index: 1;
+      max-height: 78%;
+      display: flex;
+      flex-direction: column;
+      padding: 14px 16px 18px;
+      border-radius: 20px 20px 0 0;
+      background: #1a1a1a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: none;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+      animation: vg-ai-slide 0.28s ease-out;
+    }
+    @keyframes vg-ai-slide {
+      from {
+        transform: translateY(100%);
+        opacity: 0.6;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .vg-ai-modal__close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .vg-ai-modal__close:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .vg-ai-modal__visual {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      padding: 8px 0 4px;
+    }
+    .vg-ai-modal__avatar-wrap {
+      width: 112px;
+      height: 96px;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.15) 0%, rgba(14, 165, 233, 0.08) 100%);
+    }
+    .vg-ai-modal__avatar-wrap svg {
+      width: 130px;
+      height: auto;
+      margin-top: 4px;
+      display: block;
+    }
+    .vg-ai-modal__title {
+      margin: 10px 0 8px;
+      padding-right: 36px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+    .vg-ai-modal__body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+      min-height: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.88);
+    }
+    .vg-ai-modal__body p {
+      margin: 0 0 10px;
+    }
+    .vg-ai-modal__body p:last-child {
+      margin-bottom: 0;
+    }
+    .vg-ai-modal__note {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 10px;
+      line-height: 1.4;
+      color: rgba(255, 255, 255, 0.45);
     }
   </style>
 </head>
 <body>
-  <div class="modules-page">
-  <div class="module-stack" data-module-id="m1">
-  <article class="module" aria-label="Module">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
+  <div class="device" aria-label="Telefon">
+    <div class="device__notch" aria-hidden="true"></div>
+    <div class="device__screen">
+      <div class="vg">
+        <section class="vg-hero" aria-label="Hovedbilde">
+          <div class="vg-hero__top">
+            <div class="vg-logo" aria-label="VG X">
+              VG<span class="vg-logo__x" aria-hidden="true">X</span>
+            </div>
+          </div>
+          <div class="vg-hero__bottom">
+            <span class="vg-tag">Hantavirus-saken</span>
+            <button type="button" class="vg-gallery" aria-haspopup="dialog" aria-controls="vg-ai-dialog">
+              <svg class="vg-gallery__ai" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <defs>
+                  <linearGradient id="vg-ai-btn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#c4b5fd" />
+                    <stop offset="100%" stop-color="#38bdf8" />
+                  </linearGradient>
+                </defs>
+                <circle cx="12" cy="12" r="11" fill="url(#vg-ai-btn-grad)" />
+                <circle cx="8.5" cy="10" r="1.75" fill="#fff" />
+                <circle cx="15.5" cy="10" r="1.75" fill="#fff" />
+                <path
+                  d="M8.2 14.8c1.1 1.4 2.6 2.1 3.8 2.1s2.7-.7 3.8-2.1"
+                  fill="none"
+                  stroke="#fff"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                />
+              </svg>
+              Fortell meg saken
+            </button>
+          </div>
+        </section>
 
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
+        <article class="vg-sheet">
+          <h1 class="vg-headline">Dette vet vi om hantavirus-saken</h1>
+          <ul class="vg-list">
+            <li>
+              Symptomer kan ligne på influensa; kontakt lege ved kraftig feber, hodepine eller pusteproblemer.
+            </li>
+          </ul>
+        </article>
+
+        <nav class="vg-nav" aria-label="Hovedmeny">
+          <button type="button" class="vg-nav__btn" aria-label="Meny">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <div class="vg-nav__cluster">
+            <button type="button" class="vg-nav__btn vg-nav__btn--active" aria-label="Feed" aria-current="page">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <rect x="4" y="5" width="16" height="14" rx="2" />
+                <path d="M8 9h8M8 13h5" />
+              </svg>
+            </button>
+            <button type="button" class="vg-nav__btn" aria-label="Rutenett">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="4" width="6" height="6" rx="1" />
+                <rect x="14" y="4" width="6" height="6" rx="1" />
+                <rect x="4" y="14" width="6" height="6" rx="1" />
+                <rect x="14" y="14" width="6" height="6" rx="1" />
+              </svg>
+            </button>
+          </div>
+          <button type="button" class="vg-nav__btn" aria-label="Varsler">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 5h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-2l-3 3v-3H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+              <path d="M12 8v3" />
+              <circle cx="12" cy="15" r="0.75" fill="currentColor" stroke="none" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+
+      <div class="vg-ai-modal" id="vg-ai-modal" role="presentation" aria-hidden="true">
+        <div class="vg-ai-modal__backdrop" data-ai-close tabindex="-1" aria-hidden="true"></div>
+        <div
+          class="vg-ai-modal__panel"
+          id="vg-ai-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vg-ai-title"
+        >
+          <button type="button" class="vg-ai-modal__close" data-ai-close aria-label="Lukk">×</button>
+          <div class="vg-ai-modal__visual">
+            <div class="vg-ai-modal__avatar-wrap" aria-hidden="true">
+              <svg viewBox="0 0 200 200" width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="vg-ai-bust-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#a5b4fc" />
+                    <stop offset="55%" stop-color="#38bdf8" />
+                    <stop offset="100%" stop-color="#22d3ee" />
+                  </linearGradient>
+                  <linearGradient id="vg-ai-suit" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#334155" />
+                    <stop offset="100%" stop-color="#1e293b" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M38 118 Q100 88 162 118 L172 205 Q100 232 28 205 Z"
+                  fill="url(#vg-ai-suit)"
+                  stroke="rgba(255,255,255,0.12)"
+                  stroke-width="2"
+                />
+                <rect x="78" y="92" width="44" height="28" rx="10" fill="url(#vg-ai-bust-grad)" opacity="0.35" />
+                <circle cx="100" cy="58" r="42" fill="url(#vg-ai-bust-grad)" stroke="rgba(255,255,255,0.25)" stroke-width="2" />
+                <ellipse cx="100" cy="62" rx="38" ry="36" fill="rgba(15,23,42,0.25)" />
+                <circle cx="82" cy="54" r="6" fill="#fff" />
+                <circle cx="118" cy="54" r="6" fill="#fff" />
+                <path d="M82 72 Q100 84 118 72" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                <path
+                  d="M52 118 L68 108 M148 118 L132 108"
+                  stroke="rgba(255,255,255,0.35)"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <circle cx="100" cy="100" r="4" fill="#38bdf8" opacity="0.9" />
+                <path
+                  d="M70 108h60M76 120h48M82 132h36"
+                  stroke="rgba(148,163,184,0.5)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+          </div>
+          <h2 id="vg-ai-title" class="vg-ai-modal__title">Mer om hantavirus</h2>
+          <div class="vg-ai-modal__body">
+            <p>
+              Hei! Hantavirus finnes naturlig hos smågnagere, blant annet skogsrotte. Smitte til mennesker er
+              sjelden, men kan skje når virusholdig støv fra muselort eller urin piskes opp og pustes inn – for
+              eksempel ved rydding i hytte, uthus eller ved rottereir.
+            </p>
+            <p>
+              De første dagene kan det ligne på influensa: feber, hodepine, muskelsmerter og ofte kvalme. Noen
+              får senere symptomer som tyder på påvirkning av nyrer eller lunger. Ved kraftige symptomer eller
+              rask forverring bør du ta kontakt med lege eller legevakt med én gang.
+            </p>
+            <p>
+              Du kan redusere risiko ved å lufte godt før du feier, spraye overflatevann på støv, bruke
+              åndedrettsvern ved støvende arbeid, og vaske hender etter opphold i områder der det kan være
+              mus.
+            </p>
+            <p class="vg-ai-modal__note">
+              Dette er generell informasjon og ikke personlig medisinsk rådgivning. Kontakt helsevesenet ved
+              sykdom eller bekymring.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-1">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-1" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
   </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m2">
-  <article class="module" aria-label="Module 2">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-2">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-2" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m3">
-  <article class="module" aria-label="Module 3">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-3">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-3" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m4">
-  <article class="module" aria-label="Module 4">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-4">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-4" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m5">
-  <article class="module" aria-label="Module 5">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-5">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-5" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m6">
-  <article class="module" aria-label="Module 6">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-6">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-6" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-
-  <div class="module-stack" data-module-id="m7">
-  <article class="module" aria-label="Module 7">
-    <header class="module__header">
-      <a href="pic.html" class="module__edit-btn">
-        Edit Module
-        <svg viewBox="0 0 12 12" aria-hidden="true">
-          <path fill="currentColor" d="M3 1l6 5-6 5V1z" />
-        </svg>
-      </a>
-    </header>
-
-    <div class="module__body-wrap">
-      <div class="module__body">
-        <h2 class="module__title">Module name</h2>
-        <p class="module__desc">
-          Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol...
-        </p>
-        <ul class="module__meta">
-          <li>
-            Conversations: 3
-            <span class="icon-dot" aria-hidden="true"></span>
-          </li>
-          <li>
-            Max obtainable stars: 10
-            <span class="icon-square" aria-hidden="true"></span>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <footer class="module__footer">
-      <button type="button" class="module__footer-btn" aria-expanded="false" aria-controls="module-conversations-7">
-        See all conversations
-        <span class="module__footer-chevron" aria-hidden="true">
-          <svg viewBox="0 0 12 12">
-            <path fill="currentColor" d="M2 4l4 4 4-4H2z" />
-          </svg>
-        </span>
-      </button>
-    </footer>
-  </article>
-
-  <div id="module-conversations-7" class="module-conversations" hidden aria-hidden="true">
-    <article class="sub-module" aria-label="Conversation">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 2">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-
-    <article class="sub-module" aria-label="Conversation 3">
-      <a href="pic.html" class="sub-module__hit sub-module__hit--media" aria-label="Open conversation editor">
-        <div class="sub-module__media">
-          <img src="/conversation-card-header.png" alt="" />
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--body" aria-label="Open conversation editor">
-        <div class="sub-module__body">
-          <h3 class="sub-module__title">Conversation name</h3>
-          <p class="sub-module__desc">
-            Neque porro quisquam est qui dolorem ipsot quia dolor sit amet, consectetur, adipiscims velit. Neque porro quisquam est ipsol.
-          </p>
-          <p class="sub-module__meta">Time estimated: 2 min</p>
-        </div>
-      </a>
-      <a href="pic.html" class="sub-module__hit sub-module__hit--footer" aria-label="Click to edit — open editor">
-        <div class="sub-module__footer">
-          <span class="sub-module__edit">Click to edit</span>
-        </div>
-      </a>
-    </article>
-  </div>
-  </div>
-  </div>
-  <aside class="modules-side-panel" aria-label="Modules list">
-    <h2 class="modules-side-panel__title">Modules</h2>
-    <ul class="modules-side-list"></ul>
-  </aside>
   <script>
     (function () {
-      var MODULE_PAGE_STATE_KEY = "modulePageLayoutV2";
-      var REORDER_THRESHOLD_PX = 8;
-      var modulesPage = document.querySelector(".modules-page");
-      var modulesSideList = document.querySelector(".modules-side-list");
-      var reorderDrag = null;
+      var modal = document.getElementById("vg-ai-modal");
+      var openBtn = document.querySelector(".vg-gallery");
+      var panel = document.getElementById("vg-ai-dialog");
+      if (!modal || !openBtn || !panel) return;
 
-      function clamp(v, min, max) {
-        return Math.max(min, Math.min(max, v));
+      function openModal() {
+        modal.classList.add("vg-ai-modal--open");
+        modal.setAttribute("aria-hidden", "false");
+        var closeBtn = panel.querySelector(".vg-ai-modal__close");
+        if (closeBtn) closeBtn.focus();
       }
 
-      function moduleStacksInOrder() {
-        var out = [];
-        if (!modulesPage) return out;
-        Array.prototype.forEach.call(modulesPage.children, function (node) {
-          if (
-            node.nodeType === 1 &&
-            node.classList.contains("module-stack") &&
-            node.getAttribute("data-module-id")
-          ) {
-            out.push(node);
-          }
-        });
-        return out;
+      function closeModal() {
+        modal.classList.remove("vg-ai-modal--open");
+        modal.setAttribute("aria-hidden", "true");
+        openBtn.focus();
       }
 
-      function applyStackOrder(orderIds) {
-        if (!modulesPage || !orderIds || !orderIds.length) return;
-        var map = {};
-        moduleStacksInOrder().forEach(function (el) {
-          map[el.getAttribute("data-module-id")] = el;
-        });
-        orderIds.forEach(function (id) {
-          if (map[id]) modulesPage.appendChild(map[id]);
-        });
-      }
+      openBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        openModal();
+      });
 
-      function refreshModuleTitleNumbers() {
-        moduleStacksInOrder().forEach(function (stack, idx) {
-          var titleEl = stack.querySelector(".module__title");
-          if (!titleEl) return;
-          var baseTitle = titleEl.getAttribute("data-base-title");
-          if (!baseTitle) {
-            baseTitle = (titleEl.textContent || "").replace(/^\s*\d+\.\s*/, "").trim();
-            if (!baseTitle) baseTitle = "Module";
-            titleEl.setAttribute("data-base-title", baseTitle);
-          }
-          titleEl.textContent = idx + 1 + ". " + baseTitle;
-        });
-        renderModulesSideList();
-      }
-
-      function renderModulesSideList() {
-        if (!modulesSideList) return;
-        var html = "";
-        moduleStacksInOrder().forEach(function (stack) {
-          var id = stack.getAttribute("data-module-id");
-          var titleEl = stack.querySelector(".module__title");
-          if (!id || !titleEl) return;
-          var label = (titleEl.textContent || "").trim();
-          html +=
-            '<li><button type="button" class="modules-side-link" data-target-module-id="' +
-            id +
-            '">' +
-            label +
-            "</button></li>";
-        });
-        modulesSideList.innerHTML = html;
-      }
-
-      function pulseModuleStack(stack) {
-        if (!stack) return;
-        stack.classList.remove("module-stack--scroll-highlight");
-        void stack.offsetWidth;
-        stack.classList.add("module-stack--scroll-highlight");
-        window.setTimeout(function () {
-          stack.classList.remove("module-stack--scroll-highlight");
-        }, 2050);
-      }
-
-      function saveModulePageState() {
-        try {
-          if (!modulesPage) return;
-          var order = moduleStacksInOrder().map(function (s) {
-            return s.getAttribute("data-module-id");
-          });
-          var stacksById = {};
-          moduleStacksInOrder().forEach(function (stack) {
-            var id = stack.getAttribute("data-module-id");
-            var moduleEl = stack.querySelector(".module");
-            var conv = stack.querySelector(".module-conversations");
-            if (!id || !moduleEl || !conv) return;
-            stacksById[id] = {
-              selected: moduleEl.classList.contains("module--selected"),
-              conversationsOpen: !conv.hasAttribute("hidden"),
-              convScrollTop: conv.scrollTop
-            };
-          });
-          sessionStorage.setItem(
-            MODULE_PAGE_STATE_KEY,
-            JSON.stringify({
-              v: 2,
-              scrollY: window.scrollY || document.documentElement.scrollTop || 0,
-              order: order,
-              stacksById: stacksById
-            })
-          );
-        } catch (err) {}
-      }
-
-      function restoreModulePageState() {
-        try {
-          var raw = sessionStorage.getItem(MODULE_PAGE_STATE_KEY);
-          if (!raw) return;
-          var data = JSON.parse(raw);
-          if (data.v === 2 && data.order && data.order.length) {
-            applyStackOrder(data.order);
-          }
-          var byId = data.stacksById || {};
-          moduleStacksInOrder().forEach(function (stack) {
-            var id = stack.getAttribute("data-module-id");
-            var moduleEl = stack.querySelector(".module");
-            var conv = stack.querySelector(".module-conversations");
-            var footerBtn = stack.querySelector(".module__footer-btn");
-            if (!id || !moduleEl || !conv || !footerBtn) return;
-            var s = byId[id];
-            if (!s) return;
-
-            if (s.selected) moduleEl.classList.add("module--selected");
-            else moduleEl.classList.remove("module--selected");
-
-            if (s.conversationsOpen) {
-              conv.removeAttribute("hidden");
-              conv.setAttribute("aria-hidden", "false");
-              footerBtn.setAttribute("aria-expanded", "true");
-              stack.classList.add("module-stack--conversations-open");
-            } else {
-              conv.setAttribute("hidden", "");
-              conv.setAttribute("aria-hidden", "true");
-              footerBtn.setAttribute("aria-expanded", "false");
-              stack.classList.remove("module-stack--conversations-open");
-            }
-
-            if (typeof s.convScrollTop === "number") conv.scrollTop = s.convScrollTop;
-          });
-          if (typeof data.scrollY === "number") {
-            window.scrollTo(0, data.scrollY);
-            requestAnimationFrame(function () {
-              window.scrollTo(0, data.scrollY);
-            });
-          }
-        } catch (err2) {}
-      }
-
-      restoreModulePageState();
-      refreshModuleTitleNumbers();
-
-      if (modulesSideList) {
-        modulesSideList.addEventListener("click", function (e) {
-          var btn = e.target.closest(".modules-side-link");
-          if (!btn) return;
-          var id = btn.getAttribute("data-target-module-id");
-          if (!id) return;
-          var targetStack = document.querySelector(
-            '.module-stack[data-module-id="' + id + '"]'
-          );
-          if (!targetStack) return;
-          targetStack.scrollIntoView({ behavior: "smooth", block: "start" });
-          window.setTimeout(function () {
-            pulseModuleStack(targetStack);
-          }, 220);
-        });
-      }
-
-      document.addEventListener(
-        "click",
-        function (e) {
-          var a = e.target.closest && e.target.closest("a[href]");
-          if (!a) return;
-          var href = (a.getAttribute("href") || "").trim();
-          var pathOnly = href.split("#")[0].split("?")[0];
-          var isPic =
-            pathOnly === "pic.html" || /(^|\/)pic\.html$/.test(pathOnly);
-          if (isPic) saveModulePageState();
-        },
-        true
-      );
-
-      function movePlaceholderForPointerY(pointerY) {
-        if (!reorderDrag || !modulesPage) return;
-        var ph = reorderDrag.placeholder;
-        var dragStack = reorderDrag.stack;
-        var stacksOnly = [];
-        Array.prototype.forEach.call(modulesPage.children, function (node) {
-          if (node === dragStack || node === ph) return;
-          if (node.classList.contains("module-stack")) stacksOnly.push(node);
-        });
-
-        var insertBefore = null;
-        for (var i = 0; i < stacksOnly.length; i++) {
-          var r = stacksOnly[i].getBoundingClientRect();
-          if (pointerY < r.top + r.height / 2) {
-            insertBefore = stacksOnly[i];
-            break;
-          }
-        }
-
-        if (insertBefore) {
-          modulesPage.insertBefore(ph, insertBefore);
-        } else {
-          modulesPage.appendChild(ph);
-        }
-      }
-
-      function onReorderPointerMove(ev) {
-        if (!reorderDrag) return;
-        var stack = reorderDrag.stack;
-        var w = stack.offsetWidth;
-        var h = stack.offsetHeight;
-        var margin = 8;
-        var x = clamp(
-          ev.clientX - reorderDrag.grabOffX,
-          margin,
-          window.innerWidth - w - margin
-        );
-        var y = clamp(
-          ev.clientY - reorderDrag.grabOffY,
-          margin,
-          window.innerHeight - h - margin
-        );
-        stack.style.left = x + "px";
-        stack.style.top = y + "px";
-        movePlaceholderForPointerY(ev.clientY);
-      }
-
-      function endReorderDrag() {
-        document.removeEventListener("pointermove", onReorderPointerMove);
-        document.removeEventListener("pointerup", onReorderPointerUp);
-        document.removeEventListener("pointercancel", onReorderPointerUp);
-
-        if (!reorderDrag) return;
-        var stack = reorderDrag.stack;
-        var ph = reorderDrag.placeholder;
-
-        modulesPage.insertBefore(stack, ph);
-        ph.remove();
-
-        stack.classList.remove("module-stack--reorder-dragging");
-        stack.style.width = "";
-        stack.style.left = "";
-        stack.style.top = "";
-        document.body.classList.remove("is-reordering-modules");
-
-        stack.dataset.reorderSuppressClick = "1";
-        window.setTimeout(function () {
-          delete stack.dataset.reorderSuppressClick;
-        }, 400);
-
-        refreshModuleTitleNumbers();
-        reorderDrag = null;
-      }
-
-      function onReorderPointerUp() {
-        endReorderDrag();
-      }
-
-      function beginModuleReorder(stack, ev) {
-        var conversationsEl = stack.querySelector(".module-conversations");
-        var footerBtn = stack.querySelector(".module__footer-btn");
-        if (!conversationsEl || !footerBtn) return;
-
-        if (!conversationsEl.hasAttribute("hidden")) {
-          conversationsEl.setAttribute("hidden", "");
-          conversationsEl.setAttribute("aria-hidden", "true");
-          footerBtn.setAttribute("aria-expanded", "false");
-          stack.classList.remove("module-stack--conversations-open");
-        }
-
-        var prevSlot = stack.previousElementSibling;
-        if (
-          prevSlot &&
-          prevSlot.classList.contains("module-stack-placeholder")
-        ) {
-          prevSlot.remove();
-        }
-
-        var rect = stack.getBoundingClientRect();
-        var ph = document.createElement("div");
-        ph.className = "module-stack-placeholder";
-        ph.setAttribute("aria-hidden", "true");
-        ph.style.height = rect.height + "px";
-        ph.style.width = rect.width + "px";
-        modulesPage.insertBefore(ph, stack);
-
-        reorderDrag = {
-          stack: stack,
-          placeholder: ph,
-          grabOffX: ev.clientX - rect.left,
-          grabOffY: ev.clientY - rect.top
-        };
-
-        stack.style.width = rect.width + "px";
-        stack.style.left = rect.left + "px";
-        stack.style.top = rect.top + "px";
-        stack.classList.add("module-stack--reorder-dragging");
-        document.body.classList.add("is-reordering-modules");
-
-        document.addEventListener("pointermove", onReorderPointerMove);
-        document.addEventListener("pointerup", onReorderPointerUp);
-        document.addEventListener("pointercancel", onReorderPointerUp);
-
-        ev.preventDefault();
-        onReorderPointerMove(ev);
-      }
-
-      function canStartReorderFromTarget(moduleStack, target) {
-        if (!target || !moduleStack.contains(target)) return false;
-        if (target.closest(".module__edit-btn")) return false;
-        if (target.closest(".module__footer-btn")) return false;
-        if (target.closest(".module-conversations")) return false;
-        return true;
-      }
-
-      document.querySelectorAll(".module-stack").forEach(function (moduleStack) {
-        var moduleEl = moduleStack.querySelector(".module");
-        var footerBtn = moduleStack.querySelector(".module__footer-btn");
-        var conversationsEl = moduleStack.querySelector(".module-conversations");
-        if (!moduleEl || !footerBtn || !conversationsEl) return;
-
-        moduleEl.addEventListener("click", function (e) {
-          if (moduleStack.dataset.reorderSuppressClick) return;
-          if (e.target.closest(".module__footer-btn")) return;
-          if (e.target.closest(".module__edit-btn")) return;
-          moduleEl.classList.toggle("module--selected");
-        });
-
-        footerBtn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          if (conversationsEl.hasAttribute("hidden")) {
-            conversationsEl.removeAttribute("hidden");
-            conversationsEl.setAttribute("aria-hidden", "false");
-            footerBtn.setAttribute("aria-expanded", "true");
-            moduleStack.classList.add("module-stack--conversations-open");
-          } else {
-            conversationsEl.setAttribute("hidden", "");
-            conversationsEl.setAttribute("aria-hidden", "true");
-            footerBtn.setAttribute("aria-expanded", "false");
-            moduleStack.classList.remove("module-stack--conversations-open");
-          }
-        });
-
-        moduleEl.addEventListener("pointerdown", function (e) {
-          if (e.button !== 0) return;
-          if (!canStartReorderFromTarget(moduleStack, e.target)) return;
-
-          var sx = e.clientX;
-          var sy = e.clientY;
-          var moved = false;
-
-          function onMove(ev) {
-            if (!moved) {
-              var dx = ev.clientX - sx;
-              var dy = ev.clientY - sy;
-              if (
-                dx * dx + dy * dy <
-                REORDER_THRESHOLD_PX * REORDER_THRESHOLD_PX
-              ) {
-                return;
-              }
-              moved = true;
-              document.removeEventListener("pointermove", onMove);
-              document.removeEventListener("pointerup", onUpEarly);
-              document.removeEventListener("pointercancel", onUpEarly);
-              beginModuleReorder(moduleStack, ev);
-            }
-          }
-
-          function onUpEarly() {
-            document.removeEventListener("pointermove", onMove);
-            document.removeEventListener("pointerup", onUpEarly);
-            document.removeEventListener("pointercancel", onUpEarly);
-          }
-
-          document.addEventListener("pointermove", onMove);
-          document.addEventListener("pointerup", onUpEarly);
-          document.addEventListener("pointercancel", onUpEarly);
+      modal.querySelectorAll("[data-ai-close]").forEach(function (el) {
+        el.addEventListener("click", function () {
+          closeModal();
         });
       });
 
-      document.addEventListener("click", function (e) {
-        document.querySelectorAll(".module-stack").forEach(function (stack) {
-          var mod = stack.querySelector(".module");
-          if (!mod) return;
-          if (stack.dataset.reorderSuppressClick) return;
-          if (!stack.contains(e.target)) {
-            mod.classList.remove("module--selected");
-          }
-        });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && modal.classList.contains("vg-ai-modal--open")) {
+          closeModal();
+        }
       });
     })();
   </script>

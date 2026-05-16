@@ -537,12 +537,18 @@
       display: flex;
       justify-content: center;
       pointer-events: none;
-      transition: opacity 0.35s ease, transform 0.35s ease;
+      transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+    }
+    .device-swipe-hint--hidden {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      pointer-events: none;
     }
     .device-swipe-hint__panel {
       position: relative;
-      max-width: 288px;
-      padding: 12px 14px;
+      max-width: 300px;
+      padding: 12px 14px 12px 14px;
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(12px);
@@ -550,11 +556,30 @@
       border: 1px solid rgba(255, 255, 255, 0.22);
       box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
     }
+    .device-swipe-hint__close {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    .device-swipe-hint__close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
     .device-swipe-hint__row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
-      padding: 0 2px;
+      padding-right: 22px;
       color: #f1f5f9;
     }
     .device-swipe-hint__arrow {
@@ -598,25 +623,10 @@
         animation: none;
       }
     }
-
-    .device-swipe-hint-exit__arrow {
-      animation: device-swipe-hint-nudge-right 1.15s ease-in-out infinite;
-    }
-    @keyframes device-swipe-hint-nudge-right {
-      0%,
-      100% {
-        transform: translateX(0);
-        opacity: 0.88;
-      }
-      50% {
-        transform: translateX(7px);
-        opacity: 1;
-      }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .device-swipe-hint-exit__arrow {
-        animation: none;
-      }
+    .device:has(.device__screen--video-bg) .device-swipe-hint {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -811,12 +821,13 @@
     </div>
 
     <div
-      class="device-swipe-hint device-swipe-hint--enter"
+      class="device-swipe-hint"
       id="device-swipe-hint"
       role="region"
-      aria-label="Hold med musen og dra til venstre"
+      aria-label="Tips: dra til venstre for video, til høyre for å returnere"
     >
       <div class="device-swipe-hint__panel">
+        <button type="button" class="device-swipe-hint__close" aria-label="Lukk tips">×</button>
         <div class="device-swipe-hint__row">
           <span class="device-swipe-hint__arrow" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -838,44 +849,11 @@
             </svg>
           </span>
           <div class="device-swipe-hint__copy">
-            <p class="device-swipe-hint__line">Hold med musen og dra til venstre.</p>
+            <p class="device-swipe-hint__line">
+              Hold med musen og dra <strong>til venstre</strong> for bakgrunnsvideo, og <strong>til høyre</strong> for å
+              returnere.
+            </p>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="device-swipe-hint device-swipe-hint-exit"
-      id="device-swipe-hint-exit"
-      role="region"
-      hidden
-      aria-hidden="true"
-      aria-label="Hold med musen og dra til høyre"
-    >
-      <div class="device-swipe-hint__panel">
-        <div class="device-swipe-hint__row device-swipe-hint-exit__row">
-          <div class="device-swipe-hint__copy">
-            <p class="device-swipe-hint__line">Hold med musen og dra til høyre.</p>
-          </div>
-          <span class="device-swipe-hint__arrow device-swipe-hint-exit__arrow" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M10 6l6 6-6 6"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M4 12h12"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-              />
-            </svg>
-          </span>
         </div>
       </div>
     </div>
@@ -891,22 +869,32 @@
       var deviceScreen = document.getElementById("device-screen");
       var bgVideo = document.getElementById("vg-bg-video");
       var swipeHint = document.getElementById("device-swipe-hint");
-      var exitSwipeHint = document.getElementById("device-swipe-hint-exit");
+      var swipeHintAutoTimer = null;
 
-      function hideTutorial(el) {
-        if (!el) return;
-        el.hidden = true;
-        el.setAttribute("aria-hidden", "true");
-        el.style.setProperty("display", "none", "important");
-        el.style.setProperty("visibility", "hidden", "important");
-        el.style.setProperty("opacity", "0", "important");
-        el.style.setProperty("pointer-events", "none", "important");
+      function dismissSwipeHint() {
+        if (!swipeHint || swipeHint.classList.contains("device-swipe-hint--hidden")) return;
+        swipeHint.classList.add("device-swipe-hint--hidden");
+        swipeHint.setAttribute("aria-hidden", "true");
+        if (swipeHintAutoTimer !== null) {
+          clearTimeout(swipeHintAutoTimer);
+          swipeHintAutoTimer = null;
+        }
       }
 
-      /** Etter bruker har scrollet/dratt (inn eller ut av videomodus): ingen tutorial igjen før reload. */
-      function dismissTutorialsForSession() {
-        hideTutorial(swipeHint);
-        hideTutorial(exitSwipeHint);
+      try {
+        localStorage.removeItem("news-swipe-hint-dismissed");
+        localStorage.removeItem("news-swipe-hint-dismissed-v2");
+      } catch (eLsClear) {}
+
+      if (swipeHint) {
+        swipeHintAutoTimer = setTimeout(dismissSwipeHint, 12000);
+        var closeHintBtn = swipeHint.querySelector(".device-swipe-hint__close");
+        if (closeHintBtn) {
+          closeHintBtn.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            dismissSwipeHint();
+          });
+        }
       }
 
       function videoBgActive() {
@@ -983,36 +971,26 @@
         }
 
         try {
-          if (!bgVideo.paused) {
-            bgVideo.pause();
-          }
+          bgVideo.pause();
         } catch (ePause) {}
         try {
-          if (bgVideo.currentTime > 0.08) {
-            bgVideo.currentTime = 0;
-          }
+          bgVideo.currentTime = 0;
         } catch (eCt) {}
 
         function playWhenSeekReady() {
           if (!videoBgActive() || !bgVideo) return;
-          /* Chrome: play() must run in the same synchronous turn as the wheel gesture when possible.
-             Deferring only to "seeked" drops user activation and muted play() may never start. */
-          tryPlayMuted();
           if (bgVideo.seeking) {
-            var seekFallback = window.setTimeout(function () {
-              if (!videoBgActive() || !bgVideo) return;
-              if (bgVideo.paused) tryPlayMuted();
-            }, 320);
             bgVideo.addEventListener(
               "seeked",
               function onSeeked() {
-                window.clearTimeout(seekFallback);
                 if (!videoBgActive() || !bgVideo) return;
-                if (bgVideo.paused) tryPlayMuted();
+                tryPlayMuted();
               },
               { once: true }
             );
+            return;
           }
+          tryPlayMuted();
         }
 
         playWhenSeekReady();
@@ -1024,17 +1002,13 @@
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
         var wasActive = videoBgActive();
         deviceScreen.classList.add("device__screen--video-bg");
-        dismissTutorialsForSession();
+        dismissSwipeHint();
         if (wasActive && !bgVideo.paused) return;
         startBgVideoPlayback();
       }
 
       function exitVideoBgMode() {
         if (!deviceScreen || !bgVideo) return;
-        var hadVideoBg = videoBgActive();
-        if (hadVideoBg) {
-          dismissTutorialsForSession();
-        }
         deviceScreen.classList.remove("device__screen--video-bg");
         bgVideo.pause();
         try {
@@ -1095,11 +1069,8 @@
           var dx = dragStartX - e.clientX;
           var dy = dragStartY - e.clientY;
           if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
-          if (dx > 55) {
-            enterVideoBgMode();
-          } else if (dx < -55) {
-            exitVideoBgMode();
-          }
+          if (dx > 55) enterVideoBgMode();
+          else if (dx < -55) exitVideoBgMode();
         }
 
         deviceScreen.addEventListener(
@@ -1181,6 +1152,7 @@
       }
 
       function openVideo() {
+        dismissSwipeHint();
         closeAi();
         exitVideoBgMode();
         if (!videoModal) return;

@@ -79,16 +79,18 @@
       opacity: 0;
       pointer-events: none;
       transform: translateY(0);
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      transition: opacity 0.35s ease, transform 0.4s ease;
     }
 
     .device__screen--video-bg .device__boat-bg {
       opacity: 0;
     }
 
+    /* Opacity on → off must be instant (no opacity in transition) so play() is not blocked as “invisible” (Safari). Fade out still uses .device__bg-video transition when leaving mode. */
     .device__screen--video-bg .device__bg-video {
       opacity: 1;
       transform: translateY(-5%);
+      transition: transform 0.4s ease;
     }
 
     /* —— VG X app —— */
@@ -530,6 +532,7 @@
         class="device__bg-video"
         src="/story-video.mp4"
         playsinline
+        autoplay
         loop
         preload="auto"
         muted
@@ -727,6 +730,15 @@
       function startBgVideoPlayback() {
         if (!bgVideo) return;
         bgVideo.volume = 1;
+        try {
+          bgVideo.playsInline = true;
+        } catch (ePl) {}
+        try {
+          bgVideo.setAttribute("playsinline", "");
+        } catch (eAt2) {}
+        try {
+          void bgVideo.offsetWidth;
+        } catch (eOf) {}
 
         function unmuteAfterPlaying() {
           requestAnimationFrame(function () {
@@ -739,6 +751,9 @@
 
         function tryPlayMuted() {
           bgVideo.muted = true;
+          try {
+            bgVideo.setAttribute("muted", "");
+          } catch (eMs) {}
           var p = bgVideo.play();
           if (p && typeof p.then === "function") {
             p.then(unmuteAfterPlaying).catch(function () {
@@ -750,11 +765,22 @@
                 }
               }
               if (bgVideo.readyState < 2) {
-                bgVideo.addEventListener("canplay", kick, { once: true });
-                try {
-                  bgVideo.load();
-                } catch (eLoad) {
+                var fired = false;
+                var onceLoaded = function () {
+                  if (fired) return;
+                  fired = true;
+                  bgVideo.removeEventListener("loadeddata", onceLoaded);
+                  bgVideo.removeEventListener("canplay", onceLoaded);
                   kick();
+                };
+                bgVideo.addEventListener("loadeddata", onceLoaded);
+                bgVideo.addEventListener("canplay", onceLoaded);
+                try {
+                  if (bgVideo.readyState === 0) {
+                    bgVideo.load();
+                  }
+                } catch (eLoad) {
+                  onceLoaded();
                 }
               } else {
                 requestAnimationFrame(kick);
@@ -769,6 +795,12 @@
         }
 
         tryPlayMuted();
+        if (typeof queueMicrotask === "function") {
+          queueMicrotask(function () {
+            if (!videoBgActive() || !bgVideo) return;
+            if (bgVideo.paused) tryPlayMuted();
+          });
+        }
         requestAnimationFrame(function () {
           if (!videoBgActive() || !bgVideo) return;
           if (bgVideo.paused) tryPlayMuted();
@@ -879,9 +911,6 @@
               wheelAcc = 0;
               return;
             }
-            if (typeof e.preventDefault === "function") {
-              e.preventDefault();
-            }
             wheelAcc += h;
             if (wheelResetT) clearTimeout(wheelResetT);
             wheelResetT = setTimeout(function () {
@@ -893,6 +922,9 @@
             } else if (wheelAcc < -55) {
               exitVideoBgMode();
               wheelAcc = 0;
+            }
+            if (typeof e.preventDefault === "function") {
+              e.preventDefault();
             }
           },
           { passive: false }

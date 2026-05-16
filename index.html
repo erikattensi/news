@@ -547,7 +547,7 @@
     }
     .device-swipe-hint__panel {
       position: relative;
-      max-width: 304px;
+      max-width: 288px;
       padding: 12px 14px 12px 14px;
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.92);
@@ -577,7 +577,7 @@
     }
     .device-swipe-hint__row {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 10px;
       padding-right: 22px;
       color: #f1f5f9;
@@ -597,14 +597,11 @@
       min-width: 0;
     }
     .device-swipe-hint__line {
-      margin: 0 0 7px;
+      margin: 0;
       font-size: 12.5px;
       font-weight: 550;
       line-height: 1.38;
       letter-spacing: 0.01em;
-    }
-    .device-swipe-hint__line:last-child {
-      margin-bottom: 0;
     }
     .device-swipe-hint__line strong {
       font-weight: 750;
@@ -827,7 +824,7 @@
       class="device-swipe-hint"
       id="device-swipe-hint"
       role="region"
-      aria-label="Tips: på PC dra med mus; på touch eller trackpad sveip"
+      aria-label="Tips: på PC, hold museknappen inne og dra mot venstre"
     >
       <div class="device-swipe-hint__panel">
         <button type="button" class="device-swipe-hint__close" aria-label="Lukk tips">×</button>
@@ -853,11 +850,7 @@
           </span>
           <div class="device-swipe-hint__copy">
             <p class="device-swipe-hint__line">
-              <strong>PC med mus:</strong> Hold venstre knapp inne og dra mot venstre. Det er ikke «sveip» som på
-              telefon.
-            </p>
-            <p class="device-swipe-hint__line">
-              <strong>Telefon eller trackpad:</strong> Sveip med finger eller to fingre mot venstre for bakgrunnsvideo.
+              <strong>PC med mus:</strong> Hold venstre knapp inne og dra mot venstre for å vise video i bakgrunnen.
             </p>
           </div>
         </div>

@@ -548,7 +548,7 @@
     .device-swipe-hint__panel {
       position: relative;
       max-width: 288px;
-      padding: 12px 14px 12px 14px;
+      padding: 12px 14px;
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(12px);
@@ -556,30 +556,11 @@
       border: 1px solid rgba(255, 255, 255, 0.22);
       box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
     }
-    .device-swipe-hint__close {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      border: none;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
-      color: #e2e8f0;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-    .device-swipe-hint__close:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
     .device-swipe-hint__row {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding-right: 22px;
+      padding: 0 2px;
       color: #f1f5f9;
     }
     .device-swipe-hint__arrow {
@@ -857,7 +838,6 @@
       aria-label="Hold med musen og dra til venstre"
     >
       <div class="device-swipe-hint__panel">
-        <button type="button" class="device-swipe-hint__close" aria-label="Lukk tips">×</button>
         <div class="device-swipe-hint__row">
           <span class="device-swipe-hint__arrow" aria-hidden="true">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -893,7 +873,6 @@
       aria-label="Hold med musen og dra til høyre"
     >
       <div class="device-swipe-hint__panel">
-        <button type="button" class="device-swipe-hint__close" data-exit-hint-close aria-label="Lukk tips">×</button>
         <div class="device-swipe-hint__row device-swipe-hint-exit__row">
           <div class="device-swipe-hint__copy">
             <p class="device-swipe-hint__line">Hold med musen og dra til høyre.</p>
@@ -932,65 +911,36 @@
       var deviceScreen = document.getElementById("device-screen");
       var bgVideo = document.getElementById("vg-bg-video");
       var swipeHint = document.getElementById("device-swipe-hint");
-      var swipeHintAutoTimer = null;
       var exitSwipeHint = document.getElementById("device-swipe-hint-exit");
-      var exitSwipeHintAutoTimer = null;
 
       function dismissExitSwipeHint() {
         if (!exitSwipeHint || exitSwipeHint.classList.contains("device-swipe-hint--hidden")) return;
         exitSwipeHint.classList.add("device-swipe-hint--hidden");
         exitSwipeHint.setAttribute("aria-hidden", "true");
-        if (exitSwipeHintAutoTimer !== null) {
-          clearTimeout(exitSwipeHintAutoTimer);
-          exitSwipeHintAutoTimer = null;
-        }
       }
 
       function armExitSwipeHint() {
         if (!exitSwipeHint) return;
         exitSwipeHint.classList.remove("device-swipe-hint--hidden");
         exitSwipeHint.setAttribute("aria-hidden", "false");
-        if (exitSwipeHintAutoTimer !== null) {
-          clearTimeout(exitSwipeHintAutoTimer);
-        }
-        exitSwipeHintAutoTimer = setTimeout(dismissExitSwipeHint, 12000);
       }
 
       function dismissSwipeHint() {
         if (!swipeHint || swipeHint.classList.contains("device-swipe-hint--hidden")) return;
         swipeHint.classList.add("device-swipe-hint--hidden");
         swipeHint.setAttribute("aria-hidden", "true");
-        if (swipeHintAutoTimer !== null) {
-          clearTimeout(swipeHintAutoTimer);
-          swipeHintAutoTimer = null;
-        }
+      }
+
+      function showEnterSwipeHint() {
+        if (!swipeHint) return;
+        swipeHint.classList.remove("device-swipe-hint--hidden");
+        swipeHint.setAttribute("aria-hidden", "false");
       }
 
       try {
         localStorage.removeItem("news-swipe-hint-dismissed");
         localStorage.removeItem("news-swipe-hint-dismissed-v2");
       } catch (eLsClear) {}
-
-      if (swipeHint) {
-        swipeHintAutoTimer = setTimeout(dismissSwipeHint, 12000);
-        var closeHintBtn = swipeHint.querySelector(".device-swipe-hint__close");
-        if (closeHintBtn) {
-          closeHintBtn.addEventListener("click", function (ev) {
-            ev.preventDefault();
-            dismissSwipeHint();
-          });
-        }
-      }
-
-      if (exitSwipeHint) {
-        var exitCloseBtn = exitSwipeHint.querySelector("[data-exit-hint-close]");
-        if (exitCloseBtn) {
-          exitCloseBtn.addEventListener("click", function (ev) {
-            ev.preventDefault();
-            dismissExitSwipeHint();
-          });
-        }
-      }
 
       function videoBgActive() {
         return deviceScreen && deviceScreen.classList.contains("device__screen--video-bg");
@@ -1124,14 +1074,8 @@
         try {
           bgVideo.setAttribute("muted", "");
         } catch (eAt) {}
-        if (exitSwipeHint) {
-          if (exitSwipeHintAutoTimer !== null) {
-            clearTimeout(exitSwipeHintAutoTimer);
-            exitSwipeHintAutoTimer = null;
-          }
-          exitSwipeHint.classList.remove("device-swipe-hint--hidden");
-          exitSwipeHint.setAttribute("aria-hidden", "true");
-        }
+        dismissExitSwipeHint();
+        showEnterSwipeHint();
       }
 
       if (deviceScreen) {

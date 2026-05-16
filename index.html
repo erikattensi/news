@@ -60,6 +60,12 @@
       touch-action: manipulation;
     }
 
+    /* While mouse-dragging for horizontal swipe, avoid highlighting headlines / UI text. */
+    .device__screen--mouse-drag-locked {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     .device__boat-bg {
       position: absolute;
       inset: 0;
@@ -858,6 +864,9 @@
             dragPtrId = e.pointerId;
             dragStartX = e.clientX;
             dragStartY = e.clientY;
+            if (e.pointerType === "mouse") {
+              deviceScreen.classList.add("device__screen--mouse-drag-locked");
+            }
             try {
               deviceScreen.setPointerCapture(e.pointerId);
             } catch (err) {}
@@ -871,6 +880,7 @@
             deviceScreen.releasePointerCapture(e.pointerId);
           } catch (err2) {}
           dragPtrId = null;
+          deviceScreen.classList.remove("device__screen--mouse-drag-locked");
           if (pointerGestureBlocked()) return;
           var dx = dragStartX - e.clientX;
           var dy = dragStartY - e.clientY;
@@ -894,9 +904,29 @@
                 deviceScreen.releasePointerCapture(e.pointerId);
               } catch (err3) {}
               dragPtrId = null;
+              deviceScreen.classList.remove("device__screen--mouse-drag-locked");
             }
           },
           { passive: true }
+        );
+        deviceScreen.addEventListener(
+          "lostpointercapture",
+          function (e) {
+            if (dragPtrId === e.pointerId) {
+              dragPtrId = null;
+              deviceScreen.classList.remove("device__screen--mouse-drag-locked");
+            }
+          },
+          { passive: true }
+        );
+        deviceScreen.addEventListener(
+          "selectstart",
+          function (e) {
+            if (deviceScreen.classList.contains("device__screen--mouse-drag-locked")) {
+              e.preventDefault();
+            }
+          },
+          { passive: false }
         );
 
         var wheelAcc = 0;

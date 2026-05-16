@@ -968,26 +968,36 @@
         }
 
         try {
-          bgVideo.pause();
+          if (!bgVideo.paused) {
+            bgVideo.pause();
+          }
         } catch (ePause) {}
         try {
-          bgVideo.currentTime = 0;
+          if (bgVideo.currentTime > 0.08) {
+            bgVideo.currentTime = 0;
+          }
         } catch (eCt) {}
 
         function playWhenSeekReady() {
           if (!videoBgActive() || !bgVideo) return;
+          /* Chrome: play() must run in the same synchronous turn as the wheel gesture when possible.
+             Deferring only to "seeked" drops user activation and muted play() may never start. */
+          tryPlayMuted();
           if (bgVideo.seeking) {
+            var seekFallback = window.setTimeout(function () {
+              if (!videoBgActive() || !bgVideo) return;
+              if (bgVideo.paused) tryPlayMuted();
+            }, 320);
             bgVideo.addEventListener(
               "seeked",
               function onSeeked() {
+                window.clearTimeout(seekFallback);
                 if (!videoBgActive() || !bgVideo) return;
-                tryPlayMuted();
+                if (bgVideo.paused) tryPlayMuted();
               },
               { once: true }
             );
-            return;
           }
-          tryPlayMuted();
         }
 
         playWhenSeekReady();

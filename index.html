@@ -250,12 +250,18 @@
       justify-content: flex-end;
       padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     }
-    .device__screen--video-bg .vg-hero__top {
-      display: none;
-    }
     .device__screen--video-bg .vg-hero {
+      position: static;
       flex: 0 0 auto;
       min-height: 0;
+    }
+    .device__screen--video-bg .vg-hero__top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 8;
+      padding: 14px 14px 0;
+      pointer-events: none;
     }
     .device__screen--video-bg .vg-hero__bottom {
       position: relative;

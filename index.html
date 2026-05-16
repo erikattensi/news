@@ -857,25 +857,18 @@
         if (!swipeHint || swipeHint.classList.contains("device-swipe-hint--hidden")) return;
         swipeHint.classList.add("device-swipe-hint--hidden");
         swipeHint.setAttribute("aria-hidden", "true");
-        try {
-          localStorage.setItem("news-swipe-hint-dismissed-v2", "1");
-          localStorage.removeItem("news-swipe-hint-dismissed");
-        } catch (eSt) {}
         if (swipeHintAutoTimer !== null) {
           clearTimeout(swipeHintAutoTimer);
           swipeHintAutoTimer = null;
         }
       }
 
-      var swipeHintAlreadyDismissed = false;
       try {
-        swipeHintAlreadyDismissed = localStorage.getItem("news-swipe-hint-dismissed-v2") === "1";
-      } catch (eLs) {}
-      if (swipeHint && swipeHintAlreadyDismissed) {
-        swipeHint.classList.add("device-swipe-hint--hidden");
-        swipeHint.setAttribute("aria-hidden", "true");
-      }
-      if (swipeHint && !swipeHintAlreadyDismissed) {
+        localStorage.removeItem("news-swipe-hint-dismissed");
+        localStorage.removeItem("news-swipe-hint-dismissed-v2");
+      } catch (eLsClear) {}
+
+      if (swipeHint) {
         swipeHintAutoTimer = setTimeout(dismissSwipeHint, 12000);
         var closeHintBtn = swipeHint.querySelector(".device-swipe-hint__close");
         if (closeHintBtn) {

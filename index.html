@@ -623,10 +623,40 @@
         animation: none;
       }
     }
-    .device:has(.device__screen--video-bg) .device-swipe-hint {
+    .device:has(.device__screen--video-bg) .device-swipe-hint--enter {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+    }
+
+    /* Ut av videomodus: samme stil, synlig bare når bakgrunnsvideo er på */
+    .device-swipe-hint-exit {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .device:has(.device__screen--video-bg) .device-swipe-hint-exit:not(.device-swipe-hint--hidden) {
+      opacity: 1;
+      visibility: visible;
+    }
+    .device-swipe-hint-exit__arrow {
+      animation: device-swipe-hint-nudge-right 1.15s ease-in-out infinite;
+    }
+    @keyframes device-swipe-hint-nudge-right {
+      0%,
+      100% {
+        transform: translateX(0);
+        opacity: 0.88;
+      }
+      50% {
+        transform: translateX(7px);
+        opacity: 1;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .device-swipe-hint-exit__arrow {
+        animation: none;
+      }
     }
   </style>
 </head>
@@ -821,7 +851,7 @@
     </div>
 
     <div
-      class="device-swipe-hint"
+      class="device-swipe-hint device-swipe-hint--enter"
       id="device-swipe-hint"
       role="region"
       aria-label="Hold med musen og dra til venstre"
@@ -854,6 +884,42 @@
         </div>
       </div>
     </div>
+
+    <div
+      class="device-swipe-hint device-swipe-hint-exit"
+      id="device-swipe-hint-exit"
+      role="region"
+      aria-hidden="true"
+      aria-label="Hold med musen og dra til høyre"
+    >
+      <div class="device-swipe-hint__panel">
+        <button type="button" class="device-swipe-hint__close" data-exit-hint-close aria-label="Lukk tips">×</button>
+        <div class="device-swipe-hint__row device-swipe-hint-exit__row">
+          <div class="device-swipe-hint__copy">
+            <p class="device-swipe-hint__line">Hold med musen og dra til høyre.</p>
+          </div>
+          <span class="device-swipe-hint__arrow device-swipe-hint-exit__arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M10 6l6 6-6 6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M4 12h12"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
   <script>
     (function () {
@@ -867,6 +933,28 @@
       var bgVideo = document.getElementById("vg-bg-video");
       var swipeHint = document.getElementById("device-swipe-hint");
       var swipeHintAutoTimer = null;
+      var exitSwipeHint = document.getElementById("device-swipe-hint-exit");
+      var exitSwipeHintAutoTimer = null;
+
+      function dismissExitSwipeHint() {
+        if (!exitSwipeHint || exitSwipeHint.classList.contains("device-swipe-hint--hidden")) return;
+        exitSwipeHint.classList.add("device-swipe-hint--hidden");
+        exitSwipeHint.setAttribute("aria-hidden", "true");
+        if (exitSwipeHintAutoTimer !== null) {
+          clearTimeout(exitSwipeHintAutoTimer);
+          exitSwipeHintAutoTimer = null;
+        }
+      }
+
+      function armExitSwipeHint() {
+        if (!exitSwipeHint) return;
+        exitSwipeHint.classList.remove("device-swipe-hint--hidden");
+        exitSwipeHint.setAttribute("aria-hidden", "false");
+        if (exitSwipeHintAutoTimer !== null) {
+          clearTimeout(exitSwipeHintAutoTimer);
+        }
+        exitSwipeHintAutoTimer = setTimeout(dismissExitSwipeHint, 12000);
+      }
 
       function dismissSwipeHint() {
         if (!swipeHint || swipeHint.classList.contains("device-swipe-hint--hidden")) return;
@@ -890,6 +978,16 @@
           closeHintBtn.addEventListener("click", function (ev) {
             ev.preventDefault();
             dismissSwipeHint();
+          });
+        }
+      }
+
+      if (exitSwipeHint) {
+        var exitCloseBtn = exitSwipeHint.querySelector("[data-exit-hint-close]");
+        if (exitCloseBtn) {
+          exitCloseBtn.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            dismissExitSwipeHint();
           });
         }
       }
@@ -1011,6 +1109,7 @@
         deviceScreen.classList.add("device__screen--video-bg");
         dismissSwipeHint();
         if (wasActive && !bgVideo.paused) return;
+        armExitSwipeHint();
         startBgVideoPlayback();
       }
 
@@ -1025,6 +1124,14 @@
         try {
           bgVideo.setAttribute("muted", "");
         } catch (eAt) {}
+        if (exitSwipeHint) {
+          if (exitSwipeHintAutoTimer !== null) {
+            clearTimeout(exitSwipeHintAutoTimer);
+            exitSwipeHintAutoTimer = null;
+          }
+          exitSwipeHint.classList.remove("device-swipe-hint--hidden");
+          exitSwipeHint.setAttribute("aria-hidden", "true");
+        }
       }
 
       if (deviceScreen) {
@@ -1160,6 +1267,7 @@
 
       function openVideo() {
         dismissSwipeHint();
+        dismissExitSwipeHint();
         closeAi();
         exitVideoBgMode();
         if (!videoModal) return;

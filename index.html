@@ -540,10 +540,10 @@
       transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
     }
     .device-swipe-hint--hidden {
-      opacity: 0;
-      visibility: hidden;
+      opacity: 0 !important;
+      visibility: hidden !important;
       transform: translateY(-10px);
-      pointer-events: none;
+      pointer-events: none !important;
     }
     .device-swipe-hint__panel {
       position: relative;
@@ -914,19 +914,13 @@
       var exitSwipeHint = document.getElementById("device-swipe-hint-exit");
 
       function dismissExitSwipeHint() {
-        if (!exitSwipeHint || exitSwipeHint.classList.contains("device-swipe-hint--hidden")) return;
+        if (!exitSwipeHint) return;
         exitSwipeHint.classList.add("device-swipe-hint--hidden");
         exitSwipeHint.setAttribute("aria-hidden", "true");
       }
 
-      function armExitSwipeHint() {
-        if (!exitSwipeHint) return;
-        exitSwipeHint.classList.remove("device-swipe-hint--hidden");
-        exitSwipeHint.setAttribute("aria-hidden", "false");
-      }
-
       function dismissSwipeHint() {
-        if (!swipeHint || swipeHint.classList.contains("device-swipe-hint--hidden")) return;
+        if (!swipeHint) return;
         swipeHint.classList.add("device-swipe-hint--hidden");
         swipeHint.setAttribute("aria-hidden", "true");
       }
@@ -1057,9 +1051,13 @@
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
         var wasActive = videoBgActive();
         deviceScreen.classList.add("device__screen--video-bg");
-        dismissSwipeHint();
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            dismissSwipeHint();
+            dismissExitSwipeHint();
+          });
+        });
         if (wasActive && !bgVideo.paused) return;
-        armExitSwipeHint();
         startBgVideoPlayback();
       }
 
@@ -1075,7 +1073,9 @@
           bgVideo.setAttribute("muted", "");
         } catch (eAt) {}
         dismissExitSwipeHint();
-        showEnterSwipeHint();
+        requestAnimationFrame(function () {
+          showEnterSwipeHint();
+        });
       }
 
       if (deviceScreen) {

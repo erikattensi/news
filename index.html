@@ -756,6 +756,7 @@
         }
 
         function tryPlayMuted() {
+          if (!videoBgActive() || !bgVideo) return;
           bgVideo.muted = true;
           try {
             bgVideo.setAttribute("muted", "");
@@ -765,6 +766,7 @@
             p.then(unmuteAfterPlaying).catch(function () {
               bgVideo.muted = true;
               function kick() {
+                if (!videoBgActive() || !bgVideo) return;
                 var p2 = bgVideo.play();
                 if (p2 && typeof p2.then === "function") {
                   p2.then(unmuteAfterPlaying).catch(function () {});
@@ -800,17 +802,30 @@
           }
         }
 
-        tryPlayMuted();
-        if (typeof queueMicrotask === "function") {
-          queueMicrotask(function () {
-            if (!videoBgActive() || !bgVideo) return;
-            if (bgVideo.paused) tryPlayMuted();
-          });
-        }
-        requestAnimationFrame(function () {
+        try {
+          bgVideo.pause();
+        } catch (ePause) {}
+        try {
+          bgVideo.currentTime = 0;
+        } catch (eCt) {}
+
+        function playWhenSeekReady() {
           if (!videoBgActive() || !bgVideo) return;
-          if (bgVideo.paused) tryPlayMuted();
-        });
+          if (bgVideo.seeking) {
+            bgVideo.addEventListener(
+              "seeked",
+              function onSeeked() {
+                if (!videoBgActive() || !bgVideo) return;
+                tryPlayMuted();
+              },
+              { once: true }
+            );
+            return;
+          }
+          tryPlayMuted();
+        }
+
+        playWhenSeekReady();
       }
 
       function enterVideoBgMode() {

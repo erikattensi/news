@@ -55,13 +55,35 @@
       background: #0a1628;
     }
 
-    .device__screen::before {
-      content: "";
+    .device__boat-bg {
       position: absolute;
       inset: 0;
       z-index: 0;
       pointer-events: none;
       background: #0a1628 center / cover no-repeat url("/hero-boat.png");
+      transition: opacity 0.4s ease;
+    }
+
+    .device__bg-video {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(0);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .device__screen--video-bg .device__boat-bg {
+      opacity: 0;
+    }
+
+    .device__screen--video-bg .device__bg-video {
+      opacity: 1;
+      transform: translateY(-5%);
     }
 
     /* —— VG X app —— */
@@ -215,6 +237,39 @@
       height: 5px;
       background: #d30000;
       border-radius: 1px;
+    }
+
+    /* Videomodus: UI i bunnen rett over nav; maks video over; kun tag, knapp og tittel */
+    .device__screen--video-bg .vg {
+      padding-top: 0;
+      justify-content: flex-end;
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+    .device__screen--video-bg .vg-hero__top {
+      display: none;
+    }
+    .device__screen--video-bg .vg-hero {
+      flex: 0 0 auto;
+      min-height: 0;
+    }
+    .device__screen--video-bg .vg-hero__bottom {
+      position: relative;
+      bottom: auto;
+      left: auto;
+      right: auto;
+      padding: 10px 14px 8px;
+    }
+    .device__screen--video-bg .vg-sheet {
+      flex: 0 0 auto;
+      margin-top: 0;
+      min-height: 0;
+      padding: 12px 16px 10px;
+    }
+    .device__screen--video-bg .vg-sheet .vg-list {
+      display: none;
+    }
+    .device__screen--video-bg .vg-headline {
+      margin: 0;
     }
 
     .vg-nav {
@@ -387,12 +442,88 @@
       line-height: 1.4;
       color: rgba(255, 255, 255, 0.45);
     }
+
+    /* Video («Fortell meg saken») — fullskjerm i skjermen, lukk kun nederst */
+    .vg-video-modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 60;
+      flex-direction: column;
+      padding: 0;
+    }
+    .vg-video-modal--open {
+      display: flex;
+    }
+    .vg-video-modal__backdrop {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      pointer-events: none;
+    }
+    .vg-video-modal__panel {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+    .vg-video-modal__close {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      width: 100%;
+      margin: 0;
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 0;
+      background: rgba(18, 18, 18, 0.88);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+    }
+    .vg-video-modal__close:hover {
+      background: rgba(30, 30, 30, 0.95);
+    }
+    .vg-video-modal__close:active {
+      background: rgba(10, 10, 10, 0.95);
+    }
+    .vg-video-modal__panel video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
   </style>
 </head>
 <body>
   <div class="device" aria-label="Telefon">
     <div class="device__notch" aria-hidden="true"></div>
-    <div class="device__screen">
+    <div class="device__screen" id="device-screen">
+      <div class="device__boat-bg" aria-hidden="true"></div>
+      <video
+        id="vg-bg-video"
+        class="device__bg-video"
+        src="/story-video.mp4"
+        playsinline
+        loop
+        preload="metadata"
+        muted
+        aria-hidden="true"
+      ></video>
       <div class="vg">
         <section class="vg-hero" aria-label="Hovedbilde">
           <div class="vg-hero__top">
@@ -401,8 +532,8 @@
             </div>
           </div>
           <div class="vg-hero__bottom">
-            <span class="vg-tag">Hantavirus-saken</span>
-            <button type="button" class="vg-gallery" aria-haspopup="dialog" aria-controls="vg-ai-dialog">
+            <span class="vg-tag">Hantavirus</span>
+            <button type="button" class="vg-gallery" aria-haspopup="dialog" aria-controls="vg-video-dialog">
               <svg class="vg-gallery__ai" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                 <defs>
                   <linearGradient id="vg-ai-btn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -543,42 +674,236 @@
           </div>
         </div>
       </div>
+
+      <div class="vg-video-modal" id="vg-video-modal" role="presentation" aria-hidden="true">
+        <div class="vg-video-modal__backdrop" aria-hidden="true"></div>
+        <div
+          class="vg-video-modal__panel"
+          id="vg-video-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Video om saken"
+        >
+          <video
+            id="vg-story-video"
+            src="/story-video.mp4"
+            controls
+            playsinline
+            preload="metadata"
+          ></video>
+          <button type="button" class="vg-video-modal__close" data-video-close aria-label="Lukk video">
+            Lukk
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <script>
     (function () {
-      var modal = document.getElementById("vg-ai-modal");
       var openBtn = document.querySelector(".vg-gallery");
-      var panel = document.getElementById("vg-ai-dialog");
-      if (!modal || !openBtn || !panel) return;
+      var videoModal = document.getElementById("vg-video-modal");
+      var video = document.getElementById("vg-story-video");
+      var aiModal = document.getElementById("vg-ai-modal");
+      var aiPanel = document.getElementById("vg-ai-dialog");
 
-      function openModal() {
-        modal.classList.add("vg-ai-modal--open");
-        modal.setAttribute("aria-hidden", "false");
-        var closeBtn = panel.querySelector(".vg-ai-modal__close");
-        if (closeBtn) closeBtn.focus();
+      var deviceScreen = document.getElementById("device-screen");
+      var bgVideo = document.getElementById("vg-bg-video");
+
+      function videoBgActive() {
+        return deviceScreen && deviceScreen.classList.contains("device__screen--video-bg");
       }
 
-      function closeModal() {
-        modal.classList.remove("vg-ai-modal--open");
-        modal.setAttribute("aria-hidden", "true");
-        openBtn.focus();
+      function enterVideoBgMode() {
+        if (!deviceScreen || !bgVideo) return;
+        if (videoModal && videoModal.classList.contains("vg-video-modal--open")) return;
+        if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
+        deviceScreen.classList.add("device__screen--video-bg");
+        bgVideo.muted = false;
+        var p = bgVideo.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(function () {
+            bgVideo.muted = true;
+            var p2 = bgVideo.play();
+            if (p2 && typeof p2.catch === "function") p2.catch(function () {});
+          });
+        }
       }
 
-      openBtn.addEventListener("click", function (e) {
-        e.preventDefault();
-        openModal();
-      });
+      function exitVideoBgMode() {
+        if (!deviceScreen || !bgVideo) return;
+        deviceScreen.classList.remove("device__screen--video-bg");
+        bgVideo.pause();
+        try {
+          bgVideo.currentTime = 0;
+        } catch (err) {}
+      }
 
-      modal.querySelectorAll("[data-ai-close]").forEach(function (el) {
-        el.addEventListener("click", function () {
-          closeModal();
+      if (deviceScreen) {
+        function pointerGestureBlocked() {
+          return (
+            (videoModal && videoModal.classList.contains("vg-video-modal--open")) ||
+            (aiModal && aiModal.classList.contains("vg-ai-modal--open"))
+          );
+        }
+
+        function isInteractiveTarget(el) {
+          if (!el || !el.closest) return false;
+          return !!el.closest(
+            "button, a, input, textarea, select, [role='button'], [role='tab'], [contenteditable='true']"
+          );
+        }
+
+        var dragPtrId = null;
+        var dragStartX = 0;
+        var dragStartY = 0;
+
+        deviceScreen.addEventListener(
+          "pointerdown",
+          function (e) {
+            if (pointerGestureBlocked()) return;
+            if (isInteractiveTarget(e.target)) return;
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+            dragPtrId = e.pointerId;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            try {
+              deviceScreen.setPointerCapture(e.pointerId);
+            } catch (err) {}
+          },
+          { passive: true }
+        );
+
+        function finishPointerDrag(e) {
+          if (dragPtrId !== e.pointerId) return;
+          try {
+            deviceScreen.releasePointerCapture(e.pointerId);
+          } catch (err2) {}
+          dragPtrId = null;
+          if (pointerGestureBlocked()) return;
+          var dx = dragStartX - e.clientX;
+          var dy = dragStartY - e.clientY;
+          if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
+          if (dx > 55) enterVideoBgMode();
+          else if (dx < -55) exitVideoBgMode();
+        }
+
+        deviceScreen.addEventListener(
+          "pointerup",
+          function (e) {
+            finishPointerDrag(e);
+          },
+          { passive: true }
+        );
+        deviceScreen.addEventListener(
+          "pointercancel",
+          function (e) {
+            if (dragPtrId === e.pointerId) {
+              try {
+                deviceScreen.releasePointerCapture(e.pointerId);
+              } catch (err3) {}
+              dragPtrId = null;
+            }
+          },
+          { passive: true }
+        );
+
+        var wheelAcc = 0;
+        var wheelResetT = null;
+        deviceScreen.addEventListener(
+          "wheel",
+          function (e) {
+            if (pointerGestureBlocked()) return;
+            var h = e.shiftKey ? e.deltaY : e.deltaX;
+            var v = e.shiftKey ? e.deltaX : e.deltaY;
+            if (Math.abs(h) <= Math.abs(v)) {
+              wheelAcc = 0;
+              return;
+            }
+            wheelAcc += h;
+            if (wheelResetT) clearTimeout(wheelResetT);
+            wheelResetT = setTimeout(function () {
+              wheelAcc = 0;
+            }, 450);
+            if (wheelAcc > 55) {
+              enterVideoBgMode();
+              wheelAcc = 0;
+            } else if (wheelAcc < -55) {
+              exitVideoBgMode();
+              wheelAcc = 0;
+            }
+          },
+          { passive: true }
+        );
+      }
+
+      function closeAi() {
+        if (!aiModal) return;
+        aiModal.classList.remove("vg-ai-modal--open");
+        aiModal.setAttribute("aria-hidden", "true");
+      }
+
+      function openVideo() {
+        closeAi();
+        exitVideoBgMode();
+        if (!videoModal) return;
+        videoModal.classList.add("vg-video-modal--open");
+        videoModal.setAttribute("aria-hidden", "false");
+        if (video && typeof video.play === "function") {
+          var p = video.play();
+          if (p && typeof p.catch === "function") p.catch(function () {});
+        }
+        var c = videoModal.querySelector(".vg-video-modal__close");
+        if (c) c.focus();
+      }
+
+      function closeVideo() {
+        if (!videoModal) return;
+        videoModal.classList.remove("vg-video-modal--open");
+        videoModal.setAttribute("aria-hidden", "true");
+        if (video) {
+          video.pause();
+          try {
+            video.currentTime = 0;
+          } catch (err) {}
+        }
+        if (openBtn) openBtn.focus();
+      }
+
+      if (openBtn) {
+        openBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          openVideo();
         });
-      });
+      }
+
+      if (videoModal) {
+        videoModal.querySelectorAll("[data-video-close]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            closeVideo();
+          });
+        });
+      }
+
+      if (aiModal && aiPanel) {
+        aiModal.querySelectorAll("[data-ai-close]").forEach(function (el) {
+          el.addEventListener("click", function () {
+            aiModal.classList.remove("vg-ai-modal--open");
+            aiModal.setAttribute("aria-hidden", "true");
+            if (openBtn) openBtn.focus();
+          });
+        });
+      }
 
       document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && modal.classList.contains("vg-ai-modal--open")) {
-          closeModal();
+        if (e.key !== "Escape") return;
+        if (videoModal && videoModal.classList.contains("vg-video-modal--open")) {
+          closeVideo();
+        } else if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) {
+          aiModal.classList.remove("vg-ai-modal--open");
+          aiModal.setAttribute("aria-hidden", "true");
+          if (openBtn) openBtn.focus();
+        } else if (videoBgActive()) {
+          exitVideoBgMode();
         }
       });
     })();

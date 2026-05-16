@@ -718,14 +718,29 @@
         if (videoModal && videoModal.classList.contains("vg-video-modal--open")) return;
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
         deviceScreen.classList.add("device__screen--video-bg");
-        bgVideo.muted = false;
+        bgVideo.volume = 1;
+        bgVideo.muted = true;
         var p = bgVideo.play();
-        if (p && typeof p.catch === "function") {
-          p.catch(function () {
+        if (p && typeof p.then === "function") {
+          p.then(function () {
+            requestAnimationFrame(function () {
+              bgVideo.muted = false;
+              try {
+                bgVideo.removeAttribute("muted");
+              } catch (eRm) {}
+            });
+          }).catch(function () {
             bgVideo.muted = true;
             var p2 = bgVideo.play();
-            if (p2 && typeof p2.catch === "function") p2.catch(function () {});
+            if (p2 && typeof p2.catch === "function") {
+              p2.catch(function () {});
+            }
           });
+        } else {
+          bgVideo.muted = false;
+          try {
+            bgVideo.removeAttribute("muted");
+          } catch (eRm2) {}
         }
       }
 
@@ -736,6 +751,10 @@
         try {
           bgVideo.currentTime = 0;
         } catch (err) {}
+        bgVideo.muted = true;
+        try {
+          bgVideo.setAttribute("muted", "");
+        } catch (eAt) {}
       }
 
       if (deviceScreen) {

@@ -13,6 +13,7 @@
       margin: 0;
       height: 100%;
       min-height: 100dvh;
+      overscroll-behavior-x: none;
     }
     body {
       display: flex;
@@ -31,6 +32,7 @@
       border-radius: 36px;
       background: #0f0f0f;
       padding: 10px;
+      overscroll-behavior-x: none;
       box-shadow:
         0 0 0 1px rgba(255, 255, 255, 0.06) inset,
         0 24px 48px rgba(0, 0, 0, 0.35);
@@ -53,6 +55,9 @@
       border-radius: 28px;
       overflow: hidden;
       background: #0a1628;
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: contain;
+      touch-action: manipulation;
     }
 
     .device__boat-bg {
@@ -838,6 +843,9 @@
               wheelAcc = 0;
               return;
             }
+            if (typeof e.preventDefault === "function") {
+              e.preventDefault();
+            }
             wheelAcc += h;
             if (wheelResetT) clearTimeout(wheelResetT);
             wheelResetT = setTimeout(function () {
@@ -851,7 +859,7 @@
               wheelAcc = 0;
             }
           },
-          { passive: true }
+          { passive: false }
         );
       }
 

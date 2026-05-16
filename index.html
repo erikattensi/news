@@ -537,14 +537,7 @@
       display: flex;
       justify-content: center;
       pointer-events: none;
-      transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
-    }
-    .device-swipe-hint--hidden {
-      display: none !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      transform: translateY(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
     }
     .device-swipe-hint__panel {
       position: relative;
@@ -605,22 +598,7 @@
         animation: none;
       }
     }
-    .device:has(.device__screen--video-bg) .device-swipe-hint--enter {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
 
-    /* Ut av videomodus: samme stil, synlig bare når bakgrunnsvideo er på */
-    .device-swipe-hint-exit {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .device:has(.device__screen--video-bg) .device-swipe-hint-exit:not(.device-swipe-hint--hidden) {
-      opacity: 1;
-      visibility: visible;
-    }
     .device-swipe-hint-exit__arrow {
       animation: device-swipe-hint-nudge-right 1.15s ease-in-out infinite;
     }
@@ -870,6 +848,7 @@
       class="device-swipe-hint device-swipe-hint-exit"
       id="device-swipe-hint-exit"
       role="region"
+      hidden
       aria-hidden="true"
       aria-label="Hold med musen og dra til høyre"
     >
@@ -914,34 +893,21 @@
       var swipeHint = document.getElementById("device-swipe-hint");
       var exitSwipeHint = document.getElementById("device-swipe-hint-exit");
 
-      function dismissExitSwipeHint() {
-        if (!exitSwipeHint) return;
-        exitSwipeHint.classList.add("device-swipe-hint--hidden");
-        exitSwipeHint.setAttribute("aria-hidden", "true");
+      function hideTutorial(el) {
+        if (!el) return;
+        el.hidden = true;
+        el.setAttribute("aria-hidden", "true");
+        el.style.setProperty("display", "none", "important");
+        el.style.setProperty("visibility", "hidden", "important");
+        el.style.setProperty("opacity", "0", "important");
+        el.style.setProperty("pointer-events", "none", "important");
       }
 
-      function armExitSwipeHint() {
-        if (!exitSwipeHint) return;
-        exitSwipeHint.classList.remove("device-swipe-hint--hidden");
-        exitSwipeHint.setAttribute("aria-hidden", "false");
+      /** Etter bruker har scrollet/dratt (inn eller ut av videomodus): ingen tutorial igjen før reload. */
+      function dismissTutorialsForSession() {
+        hideTutorial(swipeHint);
+        hideTutorial(exitSwipeHint);
       }
-
-      function dismissSwipeHint() {
-        if (!swipeHint) return;
-        swipeHint.classList.add("device-swipe-hint--hidden");
-        swipeHint.setAttribute("aria-hidden", "true");
-      }
-
-      function showEnterSwipeHint() {
-        if (!swipeHint) return;
-        swipeHint.classList.remove("device-swipe-hint--hidden");
-        swipeHint.setAttribute("aria-hidden", "false");
-      }
-
-      try {
-        localStorage.removeItem("news-swipe-hint-dismissed");
-        localStorage.removeItem("news-swipe-hint-dismissed-v2");
-      } catch (eLsClear) {}
 
       function videoBgActive() {
         return deviceScreen && deviceScreen.classList.contains("device__screen--video-bg");
@@ -1057,17 +1023,18 @@
         if (videoModal && videoModal.classList.contains("vg-video-modal--open")) return;
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
         var wasActive = videoBgActive();
-        dismissExitSwipeHint();
         deviceScreen.classList.add("device__screen--video-bg");
-        dismissSwipeHint();
+        dismissTutorialsForSession();
         if (wasActive && !bgVideo.paused) return;
-        armExitSwipeHint();
         startBgVideoPlayback();
       }
 
       function exitVideoBgMode() {
         if (!deviceScreen || !bgVideo) return;
-        dismissExitSwipeHint();
+        var hadVideoBg = videoBgActive();
+        if (hadVideoBg) {
+          dismissTutorialsForSession();
+        }
         deviceScreen.classList.remove("device__screen--video-bg");
         bgVideo.pause();
         try {
@@ -1077,7 +1044,6 @@
         try {
           bgVideo.setAttribute("muted", "");
         } catch (eAt) {}
-        showEnterSwipeHint();
       }
 
       if (deviceScreen) {
@@ -1130,10 +1096,8 @@
           var dy = dragStartY - e.clientY;
           if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
           if (dx > 55) {
-            dismissSwipeHint();
             enterVideoBgMode();
           } else if (dx < -55) {
-            dismissExitSwipeHint();
             exitVideoBgMode();
           }
         }
@@ -1196,11 +1160,9 @@
               wheelAcc = 0;
             }, 450);
             if (wheelAcc > 55) {
-              dismissSwipeHint();
               enterVideoBgMode();
               wheelAcc = 0;
             } else if (wheelAcc < -55) {
-              dismissExitSwipeHint();
               exitVideoBgMode();
               wheelAcc = 0;
             }
@@ -1219,8 +1181,6 @@
       }
 
       function openVideo() {
-        dismissSwipeHint();
-        dismissExitSwipeHint();
         closeAi();
         exitVideoBgMode();
         if (!videoModal) return;

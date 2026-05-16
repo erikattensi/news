@@ -61,7 +61,7 @@
       z-index: 0;
       pointer-events: none;
       background: #0a1628 center / cover no-repeat url("/hero-boat.png");
-      transition: opacity 0.4s ease;
+      transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .device__bg-video {
@@ -74,7 +74,8 @@
       opacity: 0;
       pointer-events: none;
       transform: translateY(0);
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .device__screen--video-bg .device__boat-bg {
@@ -94,6 +95,18 @@
       display: flex;
       flex-direction: column;
       color: #fff;
+      padding-top: 0;
+      padding-bottom: 0;
+      transition: padding-top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+        padding-bottom 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .vg-main {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
     .vg-hero {
@@ -203,6 +216,7 @@
       z-index: 2;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
+      transition: margin-top 0.55s cubic-bezier(0.22, 1, 0.36, 1), padding 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .vg-headline {
@@ -211,6 +225,7 @@
       font-weight: 800;
       line-height: 1.22;
       letter-spacing: -0.02em;
+      transition: margin 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .vg-list {
@@ -239,11 +254,13 @@
       border-radius: 1px;
     }
 
-    /* Videomodus: UI i bunnen rett over nav; maks video over; kun tag, knapp og tittel */
+    /* Videomodus: animert padding + innhold pakket mot bunn (nav er absolute) */
     .device__screen--video-bg .vg {
-      padding-top: 0;
-      justify-content: flex-end;
+      padding-top: min(32dvh, 200px);
       padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+    .device__screen--video-bg .vg-main {
+      justify-content: flex-end;
     }
     .device__screen--video-bg .vg-hero__top {
       display: none;
@@ -525,6 +542,7 @@
         aria-hidden="true"
       ></video>
       <div class="vg">
+        <div class="vg-main">
         <section class="vg-hero" aria-label="Hovedbilde">
           <div class="vg-hero__top">
             <div class="vg-logo" aria-label="VG X">
@@ -565,6 +583,7 @@
             </li>
           </ul>
         </article>
+        </div>
 
         <nav class="vg-nav" aria-label="Hovedmeny">
           <button type="button" class="vg-nav__btn" aria-label="Meny">

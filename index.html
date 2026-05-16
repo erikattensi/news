@@ -531,7 +531,7 @@
         src="/story-video.mp4"
         playsinline
         loop
-        preload="metadata"
+        preload="auto"
         muted
         aria-hidden="true"
       ></video>
@@ -724,35 +724,65 @@
         return deviceScreen && deviceScreen.classList.contains("device__screen--video-bg");
       }
 
+      function startBgVideoPlayback() {
+        if (!bgVideo) return;
+        bgVideo.volume = 1;
+
+        function unmuteAfterPlaying() {
+          requestAnimationFrame(function () {
+            bgVideo.muted = false;
+            try {
+              bgVideo.removeAttribute("muted");
+            } catch (eRm) {}
+          });
+        }
+
+        function tryPlayMuted() {
+          bgVideo.muted = true;
+          var p = bgVideo.play();
+          if (p && typeof p.then === "function") {
+            p.then(unmuteAfterPlaying).catch(function () {
+              bgVideo.muted = true;
+              function kick() {
+                var p2 = bgVideo.play();
+                if (p2 && typeof p2.then === "function") {
+                  p2.then(unmuteAfterPlaying).catch(function () {});
+                }
+              }
+              if (bgVideo.readyState < 2) {
+                bgVideo.addEventListener("canplay", kick, { once: true });
+                try {
+                  bgVideo.load();
+                } catch (eLoad) {
+                  kick();
+                }
+              } else {
+                requestAnimationFrame(kick);
+              }
+            });
+          } else {
+            try {
+              bgVideo.muted = false;
+              bgVideo.removeAttribute("muted");
+            } catch (eRm2) {}
+          }
+        }
+
+        tryPlayMuted();
+        requestAnimationFrame(function () {
+          if (!videoBgActive() || !bgVideo) return;
+          if (bgVideo.paused) tryPlayMuted();
+        });
+      }
+
       function enterVideoBgMode() {
         if (!deviceScreen || !bgVideo) return;
         if (videoModal && videoModal.classList.contains("vg-video-modal--open")) return;
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
+        var wasActive = videoBgActive();
         deviceScreen.classList.add("device__screen--video-bg");
-        bgVideo.volume = 1;
-        bgVideo.muted = true;
-        var p = bgVideo.play();
-        if (p && typeof p.then === "function") {
-          p.then(function () {
-            requestAnimationFrame(function () {
-              bgVideo.muted = false;
-              try {
-                bgVideo.removeAttribute("muted");
-              } catch (eRm) {}
-            });
-          }).catch(function () {
-            bgVideo.muted = true;
-            var p2 = bgVideo.play();
-            if (p2 && typeof p2.catch === "function") {
-              p2.catch(function () {});
-            }
-          });
-        } else {
-          bgVideo.muted = false;
-          try {
-            bgVideo.removeAttribute("muted");
-          } catch (eRm2) {}
-        }
+        if (wasActive && !bgVideo.paused) return;
+        startBgVideoPlayback();
       }
 
       function exitVideoBgMode() {

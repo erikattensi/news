@@ -540,10 +540,11 @@
       transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
     }
     .device-swipe-hint--hidden {
+      display: none !important;
       opacity: 0 !important;
       visibility: hidden !important;
-      transform: translateY(-10px);
       pointer-events: none !important;
+      transform: translateY(-10px);
     }
     .device-swipe-hint__panel {
       position: relative;
@@ -919,6 +920,12 @@
         exitSwipeHint.setAttribute("aria-hidden", "true");
       }
 
+      function armExitSwipeHint() {
+        if (!exitSwipeHint) return;
+        exitSwipeHint.classList.remove("device-swipe-hint--hidden");
+        exitSwipeHint.setAttribute("aria-hidden", "false");
+      }
+
       function dismissSwipeHint() {
         if (!swipeHint) return;
         swipeHint.classList.add("device-swipe-hint--hidden");
@@ -1050,19 +1057,17 @@
         if (videoModal && videoModal.classList.contains("vg-video-modal--open")) return;
         if (aiModal && aiModal.classList.contains("vg-ai-modal--open")) return;
         var wasActive = videoBgActive();
+        dismissExitSwipeHint();
         deviceScreen.classList.add("device__screen--video-bg");
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () {
-            dismissSwipeHint();
-            dismissExitSwipeHint();
-          });
-        });
+        dismissSwipeHint();
         if (wasActive && !bgVideo.paused) return;
+        armExitSwipeHint();
         startBgVideoPlayback();
       }
 
       function exitVideoBgMode() {
         if (!deviceScreen || !bgVideo) return;
+        dismissExitSwipeHint();
         deviceScreen.classList.remove("device__screen--video-bg");
         bgVideo.pause();
         try {
@@ -1072,10 +1077,7 @@
         try {
           bgVideo.setAttribute("muted", "");
         } catch (eAt) {}
-        dismissExitSwipeHint();
-        requestAnimationFrame(function () {
-          showEnterSwipeHint();
-        });
+        showEnterSwipeHint();
       }
 
       if (deviceScreen) {
@@ -1127,8 +1129,13 @@
           var dx = dragStartX - e.clientX;
           var dy = dragStartY - e.clientY;
           if (Math.abs(dy) > Math.abs(dx) * 1.2) return;
-          if (dx > 55) enterVideoBgMode();
-          else if (dx < -55) exitVideoBgMode();
+          if (dx > 55) {
+            dismissSwipeHint();
+            enterVideoBgMode();
+          } else if (dx < -55) {
+            dismissExitSwipeHint();
+            exitVideoBgMode();
+          }
         }
 
         deviceScreen.addEventListener(
@@ -1189,9 +1196,11 @@
               wheelAcc = 0;
             }, 450);
             if (wheelAcc > 55) {
+              dismissSwipeHint();
               enterVideoBgMode();
               wheelAcc = 0;
             } else if (wheelAcc < -55) {
+              dismissExitSwipeHint();
               exitVideoBgMode();
               wheelAcc = 0;
             }
